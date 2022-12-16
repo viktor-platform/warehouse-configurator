@@ -1,0 +1,19 @@
+variables:
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - test
+
+image: python:3.6-stretch
+
+test:
+  stage: test
+  script:
+    # download CLI
+    - curl -Lo viktor-cli --user $VIKTOR_DEV:$VIKTOR_TOKEN 'https://developers.viktor.ai/api/v1/get-cli/?platform=linux&format=binary' && chmod +x viktor-cli
+
+    # install app and dependencies
+    - ./viktor-cli ci-install
+
+    # perform tests
+    - ./viktor-cli ci-test
