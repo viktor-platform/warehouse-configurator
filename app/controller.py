@@ -1,11 +1,20 @@
-from munch import Munch
+from pathlib import Path
 
+from munch import Munch
 from viktor import ViktorController
-from viktor.views import GeometryView, GeometryResult, MapView, MapResult
+from viktor.geometry import CartesianAxes, Group, Point
+from viktor.views import (
+    GeometryResult,
+    GeometryView,
+    MapResult,
+    MapView,
+    WebResult,
+    WebView,
+)
 
 from app.parametrization import WarehouseParametrization
-from viktor.geometry import Group, Point, CartesianAxes
-from .model import WarehouseSteelFrame, BuildingExterior, Map, OfficeFrame
+
+from .model import BuildingExterior, Map, OfficeFrame, WarehouseSteelFrame
 
 
 class WarehouseController(ViktorController):
@@ -41,7 +50,7 @@ class WarehouseController(ViktorController):
 
         return GeometryResult(exterior)
 
-    @GeometryView("Structure", duration_guess=1)
+    @GeometryView("Structure", duration_guess=10)
     def visualize_structure(self, params, **kwargs):
         """Initiates the process of rendering a the steel structure of the warehouse model."""
 
@@ -58,3 +67,11 @@ class WarehouseController(ViktorController):
         beams = Group([warehouse, office])
 
         return GeometryResult(beams)
+
+    @WebView(" ", duration_guess=1)
+    def final_step(self, params, **kwargs):
+        """Initiates the process of rendering the last step."""
+        html_path = Path(__file__).parent / "final_step.html"
+        with html_path.open() as f:
+            html_string = f.read()
+        return WebResult(html=html_string)

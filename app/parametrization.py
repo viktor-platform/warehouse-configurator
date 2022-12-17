@@ -1,23 +1,22 @@
 from viktor.geometry import GeoPoint, GeoPolygon
 from viktor.parametrization import (
-    Parametrization,
-    Section,
-    Tab,
-    NumberField,
+    GeoPointField,
+    GeoPolygonField,
     IntegerField,
+    LineBreak,
+    Lookup,
+    NumberField,
     OptionField,
     OptionListElement,
-    Lookup,
-    ToggleButton,
-    LineBreak,
-    GeoPolygonField,
-    GeoPointField,
+    Parametrization,
+    Section,
     Step,
+    Tab,
     Text,
+    ToggleButton,
 )
 
 from .database import profiles_options
-
 
 DEFAULT_CORNER_LOCATION = GeoPoint(52.27708034013321, 4.749773456312529)
 
@@ -192,3 +191,5 @@ Click on the "Building" tab on the right to see a simplified rendered model of t
     structure.advanced_settings.visual_settings.warehouse_visible = ToggleButton(
         "Warehouse visible", default=True
     )
+
+    final_step = Step("What's next?", views="final_step")

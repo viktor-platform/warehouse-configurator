@@ -1,30 +1,28 @@
-import math
+import time
 from dataclasses import dataclass
-from math import ceil, pi, sin, cos
+from math import ceil, cos, pi, sin
 from typing import Tuple
 
+import geopy.distance
 import numpy as np
 from viktor.geometry import (
-    Group,
-    Material,
-    Line,
-    Point,
-    Extrusion,
-    Color,
     BidirectionalPattern,
-    RectangularExtrusion,
+    Color,
+    Extrusion,
+    GeoPoint,
+    GeoPolygon,
+    Group,
+    Line,
     LinearPattern,
+    Material,
+    Point,
+    RectangularExtrusion,
     circumference_is_clockwise,
     mirror_object,
-    GeoPolygon,
-    GeoPoint,
 )
-from .database import profile_properties
-import geopy.distance
-
 from viktor.views import MapPoint, MapPolygon
-import time
 
+from .database import profile_properties
 
 FLOOR_HEIGHT = 4  # [m]
 WINDOWS_HEIGHT = 2  # [m]
