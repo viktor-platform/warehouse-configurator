@@ -63,3 +63,4 @@ env
 
 # Folder visual studio code
 .vscode/
+/venv
