@@ -1,1 +1,1 @@
-from .controller import WarehouseController
+from .controller import Controller as WarehouseController
