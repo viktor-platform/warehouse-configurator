@@ -10,7 +10,7 @@ with integrated software packages, or export possibilities for further detailed 
 
 A published version of this app is available on [demo.viktor.ai](https://demo.viktor.ai/public/warehouse-configurator).
 
-![](resources/cover_image.png)
+![](.viktor-template/image.png)
 
 Here is an animation going through the steps: 
 - Step 1: Select a terrain and location of the warehouse
@@ -18,7 +18,4 @@ Here is an animation going through the steps:
 - Step 3: Select the dimensions and profiles for the steel structure
 - Step 4: Render a 3D structure model of the warehouse
 
-![](resources/steps.gif)
-
-## App structure
-This is an editor-only app type.
+![](.viktor-template/demo.gif)
