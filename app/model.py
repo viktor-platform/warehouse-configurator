@@ -4,22 +4,7 @@ from typing import Tuple
 
 import geopy.distance
 import numpy as np
-from viktor.geometry import (
-    BidirectionalPattern,
-    Color,
-    Extrusion,
-    GeoPoint,
-    GeoPolygon,
-    Group,
-    Line,
-    LinearPattern,
-    Material,
-    Point,
-    RectangularExtrusion,
-    circumference_is_clockwise,
-    mirror_object,
-)
-from viktor.views import MapPoint, MapPolygon
+import viktor as vkt
 
 from .database import profile_properties
 
@@ -61,15 +46,15 @@ class BuildingExterior:
 
     @property
     def facade_material(self):
-        return Material("Facade", color=Color(200, 200, 255), opacity=1, metalness=0.5)
+        return vkt.Material("Facade", color=vkt.Color(200, 200, 255), opacity=1, metalness=0.5)
 
     @property
     def windows_material(self):
-        return Material("Windows", color=Color(180, 180, 210), opacity=0.90, metalness=1)
+        return vkt.Material("Windows", color=vkt.Color(180, 180, 210), opacity=0.90, metalness=1)
 
     @property
     def roof_material(self):
-        return Material("Facade", color=Color(74, 80, 84), opacity=1, metalness=0.5)
+        return vkt.Material("Facade", color=vkt.Color(74, 80, 84), opacity=1, metalness=0.5)
 
     @classmethod
     def from_params(cls, params):
@@ -83,7 +68,7 @@ class BuildingExterior:
 
     def visualize(self):
         """Returns an object of the building that can be rendered in the `GeometryView`."""
-        office = Group(
+        office = vkt.Group(
             [
                 self.draw_office_first_floor(),
                 self.draw_office_facades(),
@@ -94,7 +79,7 @@ class BuildingExterior:
 
         office.translate([self.width_office / 2, self.width_building / 2, 0])
 
-        warehouse = Group(
+        warehouse = vkt.Group(
             [
                 self.draw_warehouse_facades(),
                 self.draw_warehouse_windows(),
@@ -107,61 +92,61 @@ class BuildingExterior:
             [self.width_office + self.width_warehouse / 2, self.width_building / 2, 0]
         )
 
-        return Group([office, warehouse])
+        return vkt.Group([office, warehouse])
 
-    def draw_office_facades(self) -> Group:
+    def draw_office_facades(self) -> vkt.Group:
         loc_z = FLOOR_HEIGHT
-        line = Line(Point(0, 0, loc_z), Point(0, 0, loc_z + self.facade_height))
-        facade = RectangularExtrusion(self.width_office, self.width_building, line)
+        line = vkt.Line(vkt.Point(0, 0, loc_z), vkt.Point(0, 0, loc_z + self.facade_height))
+        facade = vkt.RectangularExtrusion(self.width_office, self.width_building, line)
         facade.material = self.facade_material
-        pattern = LinearPattern(facade, [0, 0, 1], self.num_office_floors, FLOOR_HEIGHT)
+        pattern = vkt.LinearPattern(facade, [0, 0, 1], self.num_office_floors, FLOOR_HEIGHT)
         return pattern
 
-    def draw_office_windows(self) -> Group:
+    def draw_office_windows(self) -> vkt.Group:
         loc_z = FLOOR_HEIGHT + self.facade_height
-        line = Line(Point(0, 0, loc_z), Point(0, 0, loc_z + WINDOWS_HEIGHT))
-        window = RectangularExtrusion(self.width_office, self.width_building, line)
+        line = vkt.Line(vkt.Point(0, 0, loc_z), vkt.Point(0, 0, loc_z + WINDOWS_HEIGHT))
+        window = vkt.RectangularExtrusion(self.width_office, self.width_building, line)
         window.material = self.windows_material
-        pattern = LinearPattern(window, [0, 0, 1], self.num_office_floors - 1, FLOOR_HEIGHT)
+        pattern = vkt.LinearPattern(window, [0, 0, 1], self.num_office_floors - 1, FLOOR_HEIGHT)
         return pattern
 
     def draw_office_first_floor(self):
-        line = Line(Point(0, 0, 0), Point(0, 0, FLOOR_HEIGHT))
-        window = RectangularExtrusion(self.width_office, self.width_building, line)
+        line = vkt.Line(vkt.Point(0, 0, 0), vkt.Point(0, 0, FLOOR_HEIGHT))
+        window = vkt.RectangularExtrusion(self.width_office, self.width_building, line)
         window.material = self.windows_material
         return window
 
     def draw_office_roof(self):
-        line = Line(Point(0, 0, self.height_office), Point(0, 0, self.height_office + 0.5))
-        roof = RectangularExtrusion(self.width_office, self.width_building, line)
+        line = vkt.Line(vkt.Point(0, 0, self.height_office), vkt.Point(0, 0, self.height_office + 0.5))
+        roof = vkt.RectangularExtrusion(self.width_office, self.width_building, line)
         roof.material = self.roof_material
         return roof
 
-    def draw_warehouse_facades(self) -> Group:
+    def draw_warehouse_facades(self) -> vkt.Group:
         loc_z = self.height_warehouse - WINDOWS_HEIGHT - self.facade_height / 2
 
-        line = Line(Point(0, 0, 0), Point(0, 0, loc_z))
-        facade1 = RectangularExtrusion(self.width_warehouse, self.width_building, line)
+        line = vkt.Line(vkt.Point(0, 0, 0), vkt.Point(0, 0, loc_z))
+        facade1 = vkt.RectangularExtrusion(self.width_warehouse, self.width_building, line)
         facade1.material = self.facade_material
 
-        line = Line(
-            Point(0, 0, loc_z + WINDOWS_HEIGHT), Point(0, 0, self.height_warehouse)
+        line = vkt.Line(
+            vkt.Point(0, 0, loc_z + WINDOWS_HEIGHT), vkt.Point(0, 0, self.height_warehouse)
         )
-        facade2 = RectangularExtrusion(self.width_warehouse, self.width_building, line)
+        facade2 = vkt.RectangularExtrusion(self.width_warehouse, self.width_building, line)
         facade2.material = self.facade_material
 
-        return Group([facade1, facade2])
+        return vkt.Group([facade1, facade2])
 
-    def draw_warehouse_windows(self) -> Group:
+    def draw_warehouse_windows(self) -> vkt.Group:
         loc_z = self.height_warehouse - WINDOWS_HEIGHT - self.facade_height / 2
-        line = Line(Point(0, 0, loc_z), Point(0, 0, loc_z + WINDOWS_HEIGHT))
-        window = RectangularExtrusion(self.width_warehouse, self.width_building, line)
+        line = vkt.Line(vkt.Point(0, 0, loc_z), vkt.Point(0, 0, loc_z + WINDOWS_HEIGHT))
+        window = vkt.RectangularExtrusion(self.width_warehouse, self.width_building, line)
         window.material = self.windows_material
         return window
 
     def draw_warehouse_roof(self):
-        line = Line(Point(0, 0, self.height_warehouse), Point(0, 0, self.height_warehouse + 0.5))
-        roof = RectangularExtrusion(self.width_warehouse, self.width_building, line)
+        line = vkt.Line(vkt.Point(0, 0, self.height_warehouse), vkt.Point(0, 0, self.height_warehouse + 0.5))
+        roof = vkt.RectangularExtrusion(self.width_warehouse, self.width_building, line)
         roof.material = self.roof_material
         return roof
 
@@ -193,7 +178,7 @@ class WarehouseSteelFrame:
         num_truss_panels: int = 0,
         **kwargs
     ):
-        self.material = Material("blue", color=Color(100, 100, 255))
+        self.material = vkt.Material("blue", color=vkt.Color(100, 100, 255))
 
         # Warehouse properties
         self.width_warehouse = x_dimension  # Frame spacing direction
@@ -261,7 +246,7 @@ class WarehouseSteelFrame:
         )
 
     def visualise(self):
-        return Group([
+        return vkt.Group([
             self.draw_trusses(),
             self.draw_columns(),
             self.draw_purlin(),
@@ -291,7 +276,7 @@ class WarehouseSteelFrame:
             (0, 0, loc_z_truss_bottom)
         )
 
-        pattern = BidirectionalPattern(
+        pattern = vkt.BidirectionalPattern(
             base_object=truss,
             direction_1=self.direction_x,
             direction_2=self.direction_y,
@@ -303,15 +288,15 @@ class WarehouseSteelFrame:
 
         return pattern
 
-    def draw_columns(self) -> Group:
+    def draw_columns(self) -> vkt.Group:
         column = self.get_column()
 
-        line = Line(column.start, column.end)
+        line = vkt.Line(column.start, column.end)
 
-        column = RectangularExtrusion(column.width, column.width, line)
+        column = vkt.RectangularExtrusion(column.width, column.width, line)
         column.material = self.material
 
-        pattern = BidirectionalPattern(
+        pattern = vkt.BidirectionalPattern(
             column,
             self.direction_x,
             self.direction_y,
@@ -324,27 +309,27 @@ class WarehouseSteelFrame:
         return pattern
 
     def get_column(self):
-        start = Point(0, 0, 0)
-        end = Point(0, 0, self.warehouse_height - self.purlin_profile.width)
+        start = vkt.Point(0, 0, 0)
+        end = vkt.Point(0, 0, self.warehouse_height - self.purlin_profile.width)
         return Beam(start, end, self.column_profile)
 
     def get_purlin(self):
         size = self.purlin_profile.width
-        start = Point(0, 0, self.warehouse_height - size / 2)
-        end = Point(self.width_warehouse, 0, self.warehouse_height - size / 2)
+        start = vkt.Point(0, 0, self.warehouse_height - size / 2)
+        end = vkt.Point(self.width_warehouse, 0, self.warehouse_height - size / 2)
         return Beam(start, end, self.purlin_profile)
 
-    def draw_purlin(self) -> Group:
+    def draw_purlin(self) -> vkt.Group:
         purlin = self.get_purlin()
         purlin_num = int(
             self.num_truss_per_frame * self.truss_panels / self.purlin_spacing
         )
         purlin_spacing = self.width_building / purlin_num
 
-        line = Line(purlin.start, purlin.end)
-        purlin = RectangularExtrusion(purlin.width, purlin.width, line)
+        line = vkt.Line(purlin.start, purlin.end)
+        purlin = vkt.RectangularExtrusion(purlin.width, purlin.width, line)
         purlin.material = self.material
-        pattern = LinearPattern(purlin, self.direction_y, purlin_num + 1, purlin_spacing)
+        pattern = vkt.LinearPattern(purlin, self.direction_y, purlin_num + 1, purlin_spacing)
 
         return pattern
 
@@ -360,58 +345,58 @@ class WarehouseSteelFrame:
 
         # wall bracing
 
-        line = Line(Point(0, 0, 0), Point(self.frame_spacing, 0, size_height))
-        diag1 = RectangularExtrusion(width, thickness, line)
+        line = vkt.Line(vkt.Point(0, 0, 0), vkt.Point(self.frame_spacing, 0, size_height))
+        diag1 = vkt.RectangularExtrusion(width, thickness, line)
         diag1.material = self.material
 
-        line = Line(Point(self.frame_spacing, 0, 0), Point(0, 0, size_height))
-        diag2 = RectangularExtrusion(width, thickness, line)
+        line = vkt.Line(vkt.Point(self.frame_spacing, 0, 0), vkt.Point(0, 0, size_height))
+        diag2 = vkt.RectangularExtrusion(width, thickness, line)
         diag2.material = self.material
 
-        bracing = Group([diag1, diag2])
+        bracing = vkt.Group([diag1, diag2])
         bracing.add(
-            mirror_object(bracing, Point(self.width_warehouse / 2, 0, 0), (1, 0, 0))
+            vkt.geometry.mirror_object(bracing, vkt.Point(self.width_warehouse / 2, 0, 0), (1, 0, 0))
         )
         bracing.add(
-            mirror_object(bracing, Point(0, self.width_building / 2, 0), (0, 1, 0))
+            vkt.geometry.mirror_object(bracing,vkt.Point(0, self.width_building / 2, 0), (0, 1, 0))
         )
 
         if num_height > 1:
-            pattern1 = LinearPattern(bracing, [0, 0, 1], num_height, size_height)
+            pattern1 = vkt.LinearPattern(bracing, [0, 0, 1], num_height, size_height)
         else:
             pattern1 = bracing
 
         # roof bracing diagonals
-        line = Line(
-            Point(0, 0, self.warehouse_height),
-            Point(0 + self.frame_spacing, size_roof, self.warehouse_height),
+        line = vkt.Line(
+            vkt.Point(0, 0, self.warehouse_height),
+            vkt.Point(0 + self.frame_spacing, size_roof, self.warehouse_height),
         )
-        diag1 = RectangularExtrusion(thickness, width, line)
+        diag1 = vkt.RectangularExtrusion(thickness, width, line)
         diag1.material = self.material
 
-        line = Line(
-            Point(0 + self.frame_spacing, 0, self.warehouse_height),
-            Point(0, size_roof, self.warehouse_height),
+        line = vkt.Line(
+            vkt.Point(0 + self.frame_spacing, 0, self.warehouse_height),
+            vkt.Point(0, size_roof, self.warehouse_height),
         )
-        diag2 = RectangularExtrusion(thickness, width, line)
+        diag2 = vkt.RectangularExtrusion(thickness, width, line)
         diag2.material = self.material
 
-        bracing = Group([diag1, diag2])
+        bracing = vkt.Group([diag1, diag2])
         bracing.add(
-            mirror_object(bracing, Point(self.width_warehouse / 2, 0, 0), [1, 0, 0])
+            vkt.geometry.mirror_object(bracing, vkt.Point(self.width_warehouse / 2, 0, 0), [1, 0, 0])
         )
-        pattern2 = LinearPattern(bracing, self.direction_y, num_roof, size_roof)
+        pattern2 = vkt.LinearPattern(bracing, self.direction_y, num_roof, size_roof)
 
-        return Group([pattern1, pattern2])
+        return vkt.Group([pattern1, pattern2])
 
     def draw_floor(self):
-        floor_mat = Material("Floor", color=Color(180, 180, 180))
+        floor_mat = vkt.Material("Floor", color=vkt.Color(180, 180, 180))
 
-        line = Line(
-            Point(self.width_warehouse / 2, self.width_building / 2, -0.1),
-            Point(self.width_warehouse / 2, self.width_building / 2, 0.1),
+        line = vkt.Line(
+            vkt.Point(self.width_warehouse / 2, self.width_building / 2, -0.1),
+            vkt.Point(self.width_warehouse / 2, self.width_building / 2, 0.1),
         )
-        floor = RectangularExtrusion(self.width_warehouse, self.width_building, line)
+        floor = vkt.RectangularExtrusion(self.width_warehouse, self.width_building, line)
         floor.material = floor_mat
         return floor
 
@@ -428,7 +413,7 @@ class OfficeFrame:
         **kwargs
     ):
 
-        self.material = Material("blue", color=Color(100, 100, 255))
+        self.material = vkt.Material("blue", color=vkt.Color(100, 100, 255))
         self.col_profile = col_profile
 
         # Office properties
@@ -486,14 +471,14 @@ class OfficeFrame:
         bracing = self.draw_bracing()
         floor = self.draw_floor()
 
-        return Group([beams_x, beams_y, columns, bracing, floor])
+        return vkt.Group([beams_x, beams_y, columns, bracing, floor])
 
     def draw_office_columns(self):
         """Generates the vertical column pattern for the office."""
-        line = Line(Point(-self.x_dimension, 0, 0), Point(-self.x_dimension, 0, self.height))
-        column = RectangularExtrusion(self.size, self.size, line)
+        line = vkt.Line(vkt.Point(-self.x_dimension, 0, 0), vkt.Point(-self.x_dimension, 0, self.height))
+        column = vkt.RectangularExtrusion(self.size, self.size, line)
         column.material = self.material
-        pattern = BidirectionalPattern(
+        pattern = vkt.BidirectionalPattern(
             column,
             self.direction_W,
             self.direction_L,
@@ -506,14 +491,14 @@ class OfficeFrame:
 
     def draw_beams_y_orientation(self):
         """Generates the horizontal beam pattern with y-direction orientation for the office."""
-        line = Line(
-            Point(-self.x_dimension, 0, FLOOR_HEIGHT),
-            Point(-self.x_dimension, self.y_dimension, FLOOR_HEIGHT),
+        line = vkt.Line(
+            vkt.Point(-self.x_dimension, 0, FLOOR_HEIGHT),
+            vkt.Point(-self.x_dimension, self.y_dimension, FLOOR_HEIGHT),
         )
-        column = RectangularExtrusion(self.size, self.size, line)
+        column = vkt.RectangularExtrusion(self.size, self.size, line)
         column.material = self.material
 
-        pattern = BidirectionalPattern(
+        pattern = vkt.BidirectionalPattern(
             column,
             self.direction_W,
             self.direction_H,
@@ -527,11 +512,11 @@ class OfficeFrame:
 
     def draw_beams_x_orientation(self):
         """Generates the horizontal beam pattern with x-direction orientation for the office."""
-        line = Line(Point(0, 0, FLOOR_HEIGHT), Point(-self.x_dimension, 0, FLOOR_HEIGHT))
-        column = RectangularExtrusion(self.size, self.size, line)
+        line = vkt.Line(vkt.Point(0, 0, FLOOR_HEIGHT), vkt.Point(-self.x_dimension, 0, FLOOR_HEIGHT))
+        column = vkt.RectangularExtrusion(self.size, self.size, line)
         column.material = self.material
 
-        pattern = BidirectionalPattern(
+        pattern = vkt.BidirectionalPattern(
             column,
             self.direction_L,
             self.direction_H,
@@ -549,35 +534,35 @@ class OfficeFrame:
         thickness = 0.010
 
         # Front diagonals
-        line = Line(
-            Point(-self.x_dimension, 0, 0),
-            Point(-self.x_dimension, self.grid_size_y_direction, FLOOR_HEIGHT),
+        line = vkt.Line(
+            vkt.Point(-self.x_dimension, 0, 0),
+            vkt.Point(-self.x_dimension, self.grid_size_y_direction, FLOOR_HEIGHT),
         )
-        diag1 = RectangularExtrusion(thickness, width, line)
+        diag1 = vkt.RectangularExtrusion(thickness, width, line)
         diag1.material = self.material
 
-        line = Line(
-            Point(-self.x_dimension, self.grid_size_y_direction, 0),
-            Point(-self.x_dimension, 0, FLOOR_HEIGHT),
+        line = vkt.Line(
+            vkt.Point(-self.x_dimension, self.grid_size_y_direction, 0),
+            vkt.Point(-self.x_dimension, 0, FLOOR_HEIGHT),
         )
-        diag2 = RectangularExtrusion(thickness, width, line)
+        diag2 = vkt.RectangularExtrusion(thickness, width, line)
         diag2.material = self.material
 
         # Side diagonals
-        line = Line(Point(0, 0, 0), Point(-self.grid_size_x_direction, 0, FLOOR_HEIGHT))
-        diag3 = RectangularExtrusion(width, thickness, line)
+        line = vkt.Line(vkt.Point(0, 0, 0), vkt.Point(-self.grid_size_x_direction, 0, FLOOR_HEIGHT))
+        diag3 = vkt.RectangularExtrusion(width, thickness, line)
         diag3.material = self.material
 
-        line = Line(Point(-self.grid_size_x_direction, 0, 0), Point(0, 0, FLOOR_HEIGHT))
-        diag4 = RectangularExtrusion(width, thickness, line)
+        line = vkt.Line(vkt.Point(-self.grid_size_x_direction, 0, 0), vkt.Point(0, 0, FLOOR_HEIGHT))
+        diag4 = vkt.RectangularExtrusion(width, thickness, line)
         diag4.material = self.material
 
-        diagonals = Group([diag1, diag2, diag3, diag4])
+        diagonals = vkt.Group([diag1, diag2, diag3, diag4])
         diagonals.add(
-            mirror_object(diagonals, Point(0, self.y_dimension / 2, 0), (0, 1, 0))
+            vkt.geometry.mirror_object(diagonals, vkt.Point(0, self.y_dimension / 2, 0), (0, 1, 0))
         )
 
-        pattern = LinearPattern(
+        pattern = vkt.LinearPattern(
             diagonals, self.direction_H, self.num_office_floors, FLOOR_HEIGHT
         )
 
@@ -585,13 +570,13 @@ class OfficeFrame:
 
     def draw_floor(self):
         """Generates the floor of the office."""
-        floor_mat = Material("Floor", color=Color(180, 180, 180))
+        floor_mat = vkt.Material("Floor", color=vkt.Color(180, 180, 180))
 
-        line = Line(
-            Point(-self.x_dimension / 2, self.y_dimension / 2, -0.1),
-            Point(-self.x_dimension / 2, self.y_dimension / 2, 0.1),
+        line = vkt.Line(
+            vkt.Point(-self.x_dimension / 2, self.y_dimension / 2, -0.1),
+            vkt.Point(-self.x_dimension / 2, self.y_dimension / 2, 0.1),
         )
-        floor = RectangularExtrusion(self.x_dimension, self.y_dimension, line)
+        floor = vkt.RectangularExtrusion(self.x_dimension, self.y_dimension, line)
         floor.material = floor_mat
 
         return floor
@@ -600,8 +585,8 @@ class OfficeFrame:
 class Map:
     def __init__(
         self,
-        land_polygon: GeoPolygon,
-        building_corner_coordinate: GeoPoint,
+        land_polygon: vkt.GeoPolygon,
+        building_corner_coordinate: vkt.GeoPoint,
         building_rotation: float,
         building_y_dimension: float,
         office_x_dimension: float,
@@ -635,7 +620,7 @@ class Map:
 
     def get_land_polygon(self):
         """Returns a `MapPolygon` that can display the region footprint in a `MapView`."""
-        return MapPolygon.from_geo_polygon(self.land_polygon)
+        return vkt.MapPolygon.from_geo_polygon(self.land_polygon)
 
     def visualize(self):
         """Returns an object that displays the selected region in the `GeometryView`."""
@@ -643,17 +628,17 @@ class Map:
         profile = []
 
         for point in land_points:
-            profile.append(Point(point[0], point[1], 0))
+            profile.append(vkt.Point(point[0], point[1], 0))
 
         profile.append(profile[0])
 
-        if circumference_is_clockwise(profile) is not True:
+        if vkt.geometry.circumference_is_clockwise(profile) is not True:
             profile.reverse()
 
-        line = Line(Point(0, 0, -0.30), Point(0, 0, -0.1))
-        land = Extrusion(profile, line).rotate(-self.building_rotation, [0, 0, 1])
-        land.material = Material(
-            "grass", color=Color(120, 255, 130), opacity=0.9
+        line = vkt.Line(vkt.Point(0, 0, -0.30), vkt.Point(0, 0, -0.1))
+        land = vkt.Extrusion(profile, line).rotate(-self.building_rotation, [0, 0, 1])
+        land.material = vkt.Material(
+            "grass", color=vkt.Color(120, 255, 130), opacity=0.9
         )
 
         return land
@@ -711,9 +696,9 @@ class Map:
         coordinates = self._convert_points_to_map_coordinates(
             start, rotated_shape_points
         )
-        return MapPolygon(
-            points=[MapPoint(coord[0], coord[1]) for coord in coordinates],
-            color=Color(0, 0, 255),
+        return vkt.MapPolygon(
+            points=[vkt.MapPoint(coord[0], coord[1]) for coord in coordinates],
+            color=vkt.Color(0, 0, 255),
         )
 
     @staticmethod
@@ -812,7 +797,7 @@ class Truss:
         nodes_top = []
 
         for loc in np.linspace(0, self.length, self.sections + 1):
-            nodes_top.append(Point(loc, 0, self.height))
+            nodes_top.append(vkt.Point(loc, 0, self.height))
 
         return nodes_top
 
@@ -820,7 +805,7 @@ class Truss:
         nodes_bottom = []
 
         for loc in np.linspace(0, self.length, self.sections + 1):
-            nodes_bottom.append(Point(loc, 0, 0))
+            nodes_bottom.append(vkt.Point(loc, 0, 0))
 
         return nodes_bottom
 
@@ -885,48 +870,48 @@ class Truss:
 
         return diagonal_beams
 
-    def visualise(self) -> Group:
+    def visualise(self) -> vkt.Group:
         beam_objects = []
 
         for beam_top, beam_bottom in zip(self.top_beams, self.bottom_beams):
 
             beam_objects.append(
-                RectangularExtrusion(
+                vkt.RectangularExtrusion(
                     self.chord_width,
                     self.chord_width,
-                    Line(beam_top.start, beam_top.end),
+                    vkt.Line(beam_top.start, beam_top.end),
                 )
             )
             beam_objects.append(
-                RectangularExtrusion(
+                vkt.RectangularExtrusion(
                     self.chord_width,
                     self.chord_width,
-                    Line(beam_bottom.start, beam_bottom.end),
+                    vkt.Line(beam_bottom.start, beam_bottom.end),
                 )
             )
 
         for beam in self.diagonal_beams:
             beam_objects.append(
-                RectangularExtrusion(
-                    self.web_width, self.web_width, Line(beam.start, beam.end)
+                vkt.RectangularExtrusion(
+                    self.web_width, self.web_width, vkt.Line(beam.start, beam.end)
                 )
             )
 
         for beam in self.vertical_beams:
             beam_objects.append(
-                RectangularExtrusion(
-                    self.vertical_width, self.vertical_width, Line(beam.start, beam.end)
+                vkt.RectangularExtrusion(
+                    self.vertical_width, self.vertical_width, vkt.Line(beam.start, beam.end)
                 )
             )
 
         for obj in beam_objects:
             obj.material = self.material
 
-        return Group(beam_objects)
+        return vkt.Group(beam_objects)
 
 
 class Beam:
-    def __init__(self, start: Point, end: Point, profile: BeamProfile):
+    def __init__(self, start: vkt.Point, end: vkt.Point, profile: BeamProfile):
         self.start = start
         self.end = end
         self.profile = profile
